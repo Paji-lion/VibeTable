@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VibeTable 🌲</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+  <style>
+    .leaf { position: absolute; font-size: 26px; z-index: 1; pointer-events: none; }
+    .slot:hover { transform: scale(1.05); background-color: rgba(74, 222, 128, 0.25) !important; }
+  </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-emerald-950 to-teal-950 text-emerald-100 relative overflow-hidden">
+
+  <div id="leaves" class="fixed inset-0 pointer-events-none z-0"></div>
+
+  <!-- Login -->
+  <div id="loginScreen" class="fixed inset-0 bg-black/90 flex items-center justify-center z-50">
+    <div class="bg-white/10 backdrop-blur-2xl p-12 rounded-3xl w-full max-w-md text-center">
+      <h1 class="text-5xl font-bold text-emerald-300 mb-2">VibeTable</h1>
+      <p class="mb-8 text-emerald-400">Your peaceful study companion</p>
+      <input id="studentName" type="text" placeholder="Enter your name" 
+             class="w-full p-5 rounded-3xl bg-white/10 border border-emerald-400/30 text-center text-lg mb-6">
+      <button onclick="login()" class="w-full py-5 bg-emerald-500 hover:bg-emerald-600 rounded-3xl font-semibold text-xl">
+        Enter the Forest 🌲
+      </button>
+    </div>
+  </div>
+
+  <!-- Top Nav -->
+  <nav id="mainNav" class="hidden bg-black/80 backdrop-blur-xl sticky top-0 z-50 border-b border-emerald-400/30">
+    <div class="max-w-7xl mx-auto px-6 py-5 flex items-center justify-between">
+      <h1 class="text-3xl font-bold text-emerald-300">VibeTable 🌲</h1>
+      <div class="flex gap-2 bg-black/40 rounded-3xl p-1">
+        <button onclick="showPage(0)" class="nav-btn px-7 py-3 rounded-3xl font-medium">Dashboard</button>
+        <button onclick="showPage(1)" class="nav-btn px-7 py-3 rounded-3xl font-medium">Timetable</button>
+        <button onclick="showPage(2)" class="nav-btn px-7 py-3 rounded-3xl font-medium">Todo</button>
+        <button onclick="showPage(3)" class="nav-btn px-7 py-3 rounded-3xl font-medium">Music</button>
+      </div>
+      <div class="flex items-center gap-4">
+        <span id="greeting"></span>
+        <button onclick="logout()" class="px-5 py-2 bg-white/10 hover:bg-red-500/30 rounded-2xl">Logout</button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="max-w-7xl mx-auto p-8">
+
+    <!-- Dashboard -->
+    <div id="page-0" class="page">
+      <h2 class="text-5xl font-bold mb-8">Welcome back, <span id="dash-name" class="text-emerald-300"></span> 🌿</h2>
+      
+      <div id="motivation" class="text-2xl italic bg-white/10 backdrop-blur p-8 rounded-3xl mb-10"></div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="bg-white/10 backdrop-blur p-8 rounded-3xl">
+          <h3 class="text-xl mb-4">Today's Focus</h3>
+          <p id="today-focus" class="text-lg">Keep going. You're doing great!</p>
+        </div>
+        <div onclick="showPage(1)" class="bg-white/10 backdrop-blur p-8 rounded-3xl cursor-pointer hover:scale-105 transition">
+          <h3 class="text-xl mb-4">📅 Timetable</h3>
+          <p class="text-emerald-300">Open your schedule</p>
+        </div>
+        <div onclick="showPage(2)" class="bg-white/10 backdrop-blur p-8 rounded-3xl cursor-pointer hover:scale-105 transition">
+          <h3 class="text-xl mb-4">✅ Todo List</h3>
+          <p class="text-emerald-300">Check your tasks</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Timetable -->
+    <div id="page-1" class="page hidden">
+      <div class="flex justify-between mb-8">
+        <h2 class="text-4xl font-bold">My Timetable</h2>
+        <div class="flex gap-3">
+          <button onclick="addRow()" class="bg-emerald-600 px-5 py-3 rounded-2xl flex items-center gap-2">
+            <i class="fas fa-plus"></i> Add Period
+          </button>
+          <button onclick="addColumn()" class="bg-emerald-600 px-5 py-3 rounded-2xl flex items-center gap-2">
+            <i class="fas fa-plus"></i> Add Day
+          </button>
+          <button onclick="exportTimetable()" class="bg-white text-black px-5 py-3 rounded-2xl">Download PNG</button>
+        </div>
+      </div>
+      <div id="timetable" class="bg-white/5 backdrop-blur rounded-3xl p-4 overflow-x-auto"></div>
+    </div>
+
+    <!-- Todo -->
+    <div id="page-2" class="page hidden">
+      <h2 class="text-4xl font-bold mb-6">Today's Todo List 📝</h2>
+      <div class="max-w-2xl">
+        <div class="flex gap-3 mb-6">
+          <input id="todoInput" type="text" placeholder="Add new task..." class="flex-1 p-5 rounded-3xl bg-white/10 border border-emerald-400/30">
+          <button onclick="addTodo()" class="px-8 bg-emerald-600 rounded-3xl font-semibold">Add</button>
+        </div>
+        <div id="todoList" class="space-y-3"></div>
+      </div>
+    </div>
+
+    <!-- Music -->
+    <div id="page-3" class="page hidden">
+      <h2 class="text-4xl font-bold mb-8">Music Lounge 🎵</h2>
+      
+      <!-- Pre-loaded Music -->
+      <div class="mb-10">
+        <h3 class="text-xl mb-4">Pre-loaded Nature Sounds</h3>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <button onclick="playPreMusic(0)" class="bg-white/10 hover:bg-emerald-900/40 p-6 rounded-3xl text-left">
+            🌧 Gentle Rain
+          </button>
+          <button onclick="playPreMusic(1)" class="bg-white/10 hover:bg-emerald-900/40 p-6 rounded-3xl text-left">
+            🌲 Forest Ambience
+          </button>
+          <button onclick="playPreMusic(2)" class="bg-white/10 hover:bg-emerald-900/40 p-6 rounded-3xl text-left">
+            🎹 Lofi Chill
+          </button>
+          <button onclick="playPreMusic(3)" class="bg-white/10 hover:bg-emerald-900/40 p-6 rounded-3xl text-left">
+            🐦 Birds + River
+          </button>
+        </div>
+      </div>
+
+      <!-- Add from Device -->
+      <div class="bg-white/10 backdrop-blur p-8 rounded-3xl">
+        <h3 class="text-xl mb-4">Add Your Own Music</h3>
+        <input type="file" id="songUpload" accept="audio/*" class="block mb-4">
+        <button onclick="addCustomSong()" class="px-6 py-3 bg-emerald-600 rounded-2xl">Add to Playlist</button>
+      </div>
+
+      <div class="mt-10">
+        <h3 class="text-xl mb-4">Your Playlist</h3>
+        <div id="playlist" class="space-y-3"></div>
+      </div>
+    </div>
+  </div>
+
+  <audio id="audioPlayer" loop></audio>
+
+  <script>
+    const quotes = ["The roots grow deep before the branches reach high.", "Small daily improvements lead to big results.", "Discipline is the bridge between goals and success.", "Your future is created by what you do today.", "Stay focused. Stay calm. Stay consistent."];
+
+    let timetable = JSON.parse(localStorage.getItem('timetable')) || {};
+    let days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+    let periods = 10;
+    let todos = JSON.parse(localStorage.getItem('todos')) || [];
+    let playlist = JSON.parse(localStorage.getItem('playlist')) || [];
+
+    // Pre-loaded music (free public links)
+    const preMusic = [
+      "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",  // Rain
+      "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3",  // Forest
+      "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-17.mp3", // Lofi style
+      "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3"   // Calm
+    ];
+
+    function login() {
+      const name = document.getElementById('studentName').value.trim();
+      if (!name) return alert("Please enter your name");
+      localStorage.setItem('studentName', name);
+      document.getElementById('loginScreen').classList.add('hidden');
+      document.getElementById('mainNav').classList.remove('hidden');
+      initDashboard();
+    }
+
+    function logout() {
+      if (confirm("Logout?")) {
+        document.getElementById('loginScreen').classList.remove('hidden');
+        document.getElementById('mainNav').classList.add('hidden');
+      }
+    }
+
+    function initDashboard() {
+      const name = localStorage.getItem('studentName');
+      document.getElementById('dash-name').textContent = name;
+      document.getElementById('greeting').textContent = `Hey ${name}!`;
+
+      const quote = quotes[Math.floor(Math.random() * quotes.length)];
+      document.getElementById('motivation').innerHTML = `"${quote}"`;
+    }
+
+    function showPage(n) {
+      document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
+      document.getElementById(`page-${n}`).classList.remove('hidden');
+      gsap.fromTo(`#page-${n}`, {opacity:0, y:30}, {opacity:1, y:0, duration:0.6});
+      
+      if (n===1) loadTimetable();
+      if (n===2) loadTodos();
+      if (n===3) loadPlaylist();
+    }
+
+    function createLeaf() {
+      const leaf = document.createElement('div');
+      leaf.className = 'leaf';
+      leaf.textContent = ['🍃','🌿','🍂','🌱'][Math.floor(Math.random()*4)];
+      leaf.style.left = Math.random() * 100 + 'vw';
+      leaf.style.top = '-50px';
+      document.getElementById('leaves').appendChild(leaf);
+      gsap.to(leaf, {y: window.innerHeight+100, x: Math.random()*300-150, rotation: Math.random()*800, duration: 15+Math.random()*20, onComplete: () => leaf.remove()});
+    }
+
+    // Pre Music
+    function playPreMusic(index) {
+      document.getElementById('audioPlayer').src = preMusic[index];
+      document.getElementById('audioPlayer').play();
+    }
+
+    function addCustomSong() {
+      const file = document.getElementById('songUpload').files[0];
+      if (!file) return alert("Select a song first");
+      const url = URL.createObjectURL(file);
+      playlist.push({name: file.name, url});
+      localStorage.setItem('playlist', JSON.stringify(playlist));
+      loadPlaylist();
+      document.getElementById('audioPlayer').src = url;
+      document.getElementById('audioPlayer').play();
+    }
+
+    function loadPlaylist() {
+      const container = document.getElementById('playlist');
+      container.innerHTML = playlist.map(song => `
+        <div onclick="document.getElementById('audioPlayer').src='${song.url}';document.getElementById('audioPlayer').play()" 
+             class="bg-white/10 hover:bg-emerald-900/40 p-5 rounded-3xl cursor-pointer">
+          ${song.name}
+        </div>
+      `).join('');
+    }
+
+    // Other functions (Timetable, Todo, etc.)
+    function loadTimetable() {
+      let html = `<table class="w-full min-w-[900px]">`;
+      html += `<tr class="bg-white/10"><th class="p-5 text-left">Time</th>`;
+      days.forEach(d => html += `<th class="p-5">${d}</th>`);
+      html += `</tr>`;
+      for (let i = 0; i < periods; i++) {
+        const time = `${8 + Math.floor(i/2)}:${i%2===0 ? '00' : '30'}`;
+        html += `<tr><td class="p-5 border border-white/10">${time}</td>`;
+        days.forEach(day => {
+          const key = `${day}-${time}`;
+          const sub = timetable[key] || '';
+          html += `<td onclick="editSlot('${key}')" class="slot p-5 border border-white/10 text-center cursor-pointer min-h-[85px]">${sub || '<span class="opacity-40">+ Add</span>'}</td>`;
+        });
+        html += `</tr>`;
+      }
+      html += `</table>`;
+      document.getElementById('timetable').innerHTML = html;
+    }
+
+    function editSlot(key) {
+      const newSub = prompt("Enter Subject:", timetable[key] || "");
+      if (newSub !== null) {
+        if (newSub.trim() === "") delete timetable[key];
+        else timetable[key] = newSub.trim();
+        localStorage.setItem('timetable', JSON.stringify(timetable));
+        loadTimetable();
+      }
+    }
+
+    function addRow() { periods++; loadTimetable(); }
+    function addColumn() {
+      const newDay = prompt("New Day Name:", "Saturday");
+      if (newDay) days.push(newDay);
+      loadTimetable();
+    }
+
+    function addTodo() {
+      const input = document.getElementById('todoInput');
+      if (input.value.trim()) {
+        todos.push({text: input.value.trim(), done: false});
+        localStorage.setItem('todos', JSON.stringify(todos));
+        input.value = '';
+        loadTodos();
+      }
+    }
+
+    function loadTodos() {
+      const container = document.getElementById('todoList');
+      container.innerHTML = todos.map((todo, i) => `
+        <div class="flex items-center gap-4 bg-white/10 p-5 rounded-3xl">
+          <input type="checkbox" ${todo.done ? 'checked' : ''} onchange="toggleTodo(${i})">
+          <span class="${todo.done ? 'line-through opacity-60' : ''} flex-1">${todo.text}</span>
+          <button onclick="deleteTodo(${i})" class="text-red-400"><i class="fas fa-trash"></i></button>
+        </div>
+      `).join('');
+    }
+
+    function toggleTodo(i) { todos[i].done = !todos[i].done; localStorage.setItem('todos', JSON.stringify(todos)); loadTodos(); }
+    function deleteTodo(i) { todos.splice(i,1); localStorage.setItem('todos', JSON.stringify(todos)); loadTodos(); }
+
+    async function exportTimetable() {
+      const canvas = await html2canvas(document.getElementById('timetable'));
+      const link = document.createElement('a');
+      link.download = 'VibeTable.png';
+      link.href = canvas.toDataURL();
+      link.click();
+    }
+
+    window.onload = () => {
+      const savedName = localStorage.getItem('studentName');
+      if (savedName) {
+        document.getElementById('loginScreen').classList.add('hidden');
+        document.getElementById('mainNav').classList.remove('hidden');
+        initDashboard();
+      }
+
+      for (let i = 0; i < 12; i++) createLeaf();
+      setInterval(createLeaf, 450);
+      showPage(0);
+    };
+  </script>
+</body>
+</html>
