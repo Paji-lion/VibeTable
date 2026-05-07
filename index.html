@@ -9,129 +9,191 @@
   <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
   <style>
+    body { perspective: 1000px; cursor: default; } 
     .leaf { position: absolute; font-size: 26px; z-index: 1; pointer-events: none; }
     .slot:hover { transform: scale(1.05); background-color: rgba(74, 222, 128, 0.25) !important; }
+    
+    #timer-circle {
+      box-shadow: 0 0 40px rgba(16, 185, 129, 0.2), inset 0 0 40px rgba(16, 185, 129, 0.2);
+    }
+    
+    .tilt-effect { transform-style: preserve-3d; transition: transform 0.1s ease-out; }
+    
+    /* Periodic Table Styling */
+    .element-card { transition: all 0.3s ease; cursor: help; }
+    .element-card:hover { transform: scale(1.1) translateZ(20px); z-index: 50; background: rgba(16, 185, 129, 0.4) !important; }
   </style>
 </head>
 <body class="min-h-screen bg-gradient-to-br from-emerald-950 to-teal-950 text-emerald-100 relative overflow-hidden">
 
   <div id="leaves" class="fixed inset-0 pointer-events-none z-0"></div>
 
-  <!-- Login -->
-  <div id="loginScreen" class="fixed inset-0 bg-black/90 flex items-center justify-center z-50">
-    <div class="bg-white/10 backdrop-blur-2xl p-12 rounded-3xl w-full max-w-md text-center">
-      <h1 class="text-5xl font-bold text-emerald-300 mb-2">VibeTable</h1>
-      <p class="mb-8 text-emerald-400">Your peaceful study companion</p>
-      <input id="studentName" type="text" placeholder="Enter your name" 
-             class="w-full p-5 rounded-3xl bg-white/10 border border-emerald-400/30 text-center text-lg mb-6">
-      <button onclick="login()" class="w-full py-5 bg-emerald-500 hover:bg-emerald-600 rounded-3xl font-semibold text-xl">
+  <div id="loginScreen" class="fixed inset-0 bg-black/90 flex items-center justify-center z-50 transition-opacity duration-500">
+    <div class="tilt-effect bg-white/5 backdrop-blur-2xl p-10 rounded-3xl w-full max-w-md text-center border border-white/10 shadow-2xl relative transition-all duration-300">
+      <h1 class="text-5xl font-bold text-emerald-400 mb-2 transform translate-z-10">VibeTable</h1>
+      <p class="mb-8 text-emerald-200/60" id="loginSubtext">Sign in to your peaceful workspace</p>
+      
+      <div class="space-y-4 mb-8">
+        <div class="relative text-left">
+          <i class="fas fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-emerald-400/50"></i>
+          <input id="studentEmail" type="email" placeholder="Email Address" 
+                 class="w-full py-4 pl-12 pr-4 rounded-2xl bg-black/40 border border-emerald-400/20 text-white placeholder-gray-500 focus:outline-none focus:border-emerald-400 transition-all">
+        </div>
+        
+        <div class="relative text-left">
+          <i class="fas fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-emerald-400/50"></i>
+          <input id="studentPassword" type="password" placeholder="Password" 
+                 class="w-full py-4 pl-12 pr-4 rounded-2xl bg-black/40 border border-emerald-400/20 text-white placeholder-gray-500 focus:outline-none focus:border-emerald-400 transition-all">
+        </div>
+      </div>
+
+      <button onclick="handleLogin()" class="w-full py-4 bg-emerald-600 hover:bg-emerald-500 rounded-2xl font-semibold text-lg transition-all shadow-[0_0_20px_rgba(5,150,105,0.3)] hover:scale-[1.02]">
         Enter the Forest 🌲
       </button>
+      
+      <p onclick="forgotPassword()" class="mt-6 text-sm text-gray-500 hover:text-emerald-400 cursor-pointer transition-colors">Forgot Password?</p>
     </div>
   </div>
 
-  <!-- Top Nav -->
-  <nav id="mainNav" class="hidden bg-black/80 backdrop-blur-xl sticky top-0 z-50 border-b border-emerald-400/30">
-    <div class="max-w-7xl mx-auto px-6 py-5 flex items-center justify-between">
-      <h1 class="text-3xl font-bold text-emerald-300">VibeTable 🌲</h1>
-      <div class="flex gap-2 bg-black/40 rounded-3xl p-1">
-        <button onclick="showPage(0)" class="nav-btn px-7 py-3 rounded-3xl font-medium">Dashboard</button>
-        <button onclick="showPage(1)" class="nav-btn px-7 py-3 rounded-3xl font-medium">Timetable</button>
-        <button onclick="showPage(2)" class="nav-btn px-7 py-3 rounded-3xl font-medium">Todo</button>
-        <button onclick="showPage(3)" class="nav-btn px-7 py-3 rounded-3xl font-medium">Music</button>
+  <nav id="mainNav" class="hidden bg-black/80 backdrop-blur-xl sticky top-0 z-50 border-b border-emerald-400/30 transition-all duration-500">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <h1 class="text-2xl font-bold text-emerald-300">VibeTable 🌲</h1>
+      <div class="flex gap-1 bg-black/40 rounded-3xl p-1 overflow-x-auto max-w-[65%]">
+        <button onclick="showPage(0)" class="nav-btn px-5 py-2 rounded-2xl text-sm font-medium hover:bg-white/10 transition-all">Dashboard</button>
+        <button onclick="showPage(4)" class="nav-btn px-5 py-2 rounded-2xl text-sm font-medium text-emerald-400 hover:bg-white/10 transition-all">Focus</button>
+        <button onclick="showPage(5)" class="nav-btn px-5 py-2 rounded-2xl text-sm font-medium text-blue-400 hover:bg-white/10 transition-all">Elements</button>
+        <button onclick="showPage(1)" class="nav-btn px-5 py-2 rounded-2xl text-sm font-medium hover:bg-white/10 transition-all">Timetable</button>
+        <button onclick="showPage(2)" class="nav-btn px-5 py-2 rounded-2xl text-sm font-medium hover:bg-white/10 transition-all">Todo</button>
+        <button onclick="showPage(3)" class="nav-btn px-5 py-2 rounded-2xl text-sm font-medium hover:bg-white/10 transition-all">Music</button>
       </div>
-      <div class="flex items-center gap-4">
-        <span id="greeting"></span>
-        <button onclick="logout()" class="px-5 py-2 bg-white/10 hover:bg-red-500/30 rounded-2xl">Logout</button>
+      <div class="flex items-center gap-3">
+        <a href="https://mail.google.com/mail/?view=cm&fs=1&to=lyricalparmeet7@gmail.com&su=VibeTable%20Report" target="_blank" class="px-3 py-2 bg-emerald-600/20 hover:bg-emerald-600 rounded-xl transition text-xs shadow-lg flex items-center gap-2">
+          <i class="fas fa-envelope"></i> <span class="hidden md:inline">Report</span>
+        </a>
+        <button onclick="logout()" class="px-4 py-2 bg-white/10 hover:bg-red-500/80 rounded-xl transition text-xs">Logout</button>
       </div>
     </div>
   </nav>
 
-  <div class="max-w-7xl mx-auto p-8">
+  <div id="mainContent" class="max-w-7xl mx-auto p-8 relative z-10">
 
-    <!-- Dashboard -->
-    <div id="page-0" class="page">
-      <h2 class="text-5xl font-bold mb-8">Welcome back, <span id="dash-name" class="text-emerald-300"></span> 🌿</h2>
+    <div id="page-0" class="page hidden">
+      <h2 class="text-5xl font-bold mb-8 drop-shadow-lg transition-all">Welcome back, <span id="dash-name" class="text-emerald-400"></span> 🌿</h2>
       
-      <div id="motivation" class="text-2xl italic bg-white/10 backdrop-blur p-8 rounded-3xl mb-10"></div>
+      <div id="motivation" class="tilt-effect text-2xl italic bg-white/10 backdrop-blur p-8 rounded-3xl mb-10 border border-white/5 shadow-xl transition-all"></div>
 
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="bg-white/10 backdrop-blur p-8 rounded-3xl">
-          <h3 class="text-xl mb-4">Today's Focus</h3>
-          <p id="today-focus" class="text-lg">Keep going. You're doing great!</p>
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 perspective-1000">
+        <div onclick="showPage(4)" class="tilt-effect bg-emerald-900/40 backdrop-blur p-6 rounded-3xl cursor-pointer transition-all border border-emerald-500/30 hover:border-emerald-400/60 shadow-lg hover:bg-emerald-800/50">
+          <h3 class="text-lg mb-2 text-emerald-200">⏱️ Focus Room</h3>
+          <p class="text-xs text-emerald-400/80">Start a Pomodoro session</p>
         </div>
-        <div onclick="showPage(1)" class="bg-white/10 backdrop-blur p-8 rounded-3xl cursor-pointer hover:scale-105 transition">
-          <h3 class="text-xl mb-4">📅 Timetable</h3>
-          <p class="text-emerald-300">Open your schedule</p>
+        <div onclick="showPage(5)" class="tilt-effect bg-blue-900/40 backdrop-blur p-6 rounded-3xl cursor-pointer transition-all border border-blue-500/30 hover:border-blue-400/60 shadow-lg hover:bg-blue-800/50">
+          <h3 class="text-lg mb-2 text-blue-200">🧪 Periodic Table</h3>
+          <p class="text-xs text-blue-400/80">Chemistry revision</p>
         </div>
-        <div onclick="showPage(2)" class="bg-white/10 backdrop-blur p-8 rounded-3xl cursor-pointer hover:scale-105 transition">
-          <h3 class="text-xl mb-4">✅ Todo List</h3>
-          <p class="text-emerald-300">Check your tasks</p>
+        <div onclick="showPage(1)" class="tilt-effect bg-emerald-900/40 backdrop-blur p-6 rounded-3xl cursor-pointer transition-all border border-emerald-500/20 hover:border-emerald-400/60 shadow-lg hover:bg-emerald-800/50">
+          <h3 class="text-lg mb-2 text-emerald-200">📅 Timetable</h3>
+          <p class="text-xs text-emerald-400/80">Open your schedule</p>
+        </div>
+        <div onclick="showPage(2)" class="tilt-effect bg-emerald-900/40 backdrop-blur p-6 rounded-3xl cursor-pointer transition-all border border-emerald-500/20 hover:border-emerald-400/60 shadow-lg hover:bg-emerald-800/50">
+          <h3 class="text-lg mb-2 text-emerald-200">✅ Todo List</h3>
+          <p class="text-xs text-emerald-400/80">Check your tasks</p>
         </div>
       </div>
     </div>
 
-    <!-- Timetable -->
+    <div id="page-5" class="page hidden">
+      <h2 class="text-4xl font-bold mb-6 text-blue-300">Periodic Table of Elements 🧪</h2>
+      <div class="bg-white/5 backdrop-blur rounded-3xl p-6 border border-white/10">
+        <div id="periodic-table" class="grid grid-cols-3 md:grid-cols-6 lg:grid-cols-10 gap-3 overflow-y-auto max-h-[65vh] p-2 pr-4 scrollbar-thin">
+          </div>
+      </div>
+    </div>
+
+    <div id="page-4" class="page hidden text-center max-w-2xl mx-auto">
+      <h2 class="text-4xl font-bold mb-12 text-emerald-300">Deep Focus ⏱️</h2>
+      
+      <div id="timer-circle" class="tilt-effect w-72 h-72 mx-auto rounded-full border-4 border-emerald-500/50 flex flex-col items-center justify-center bg-black/20 backdrop-blur-md mb-10 relative transition-all">
+        <div class="text-6xl font-mono font-bold text-emerald-100 drop-shadow-[0_0_10px_rgba(16,185,129,0.8)]" id="timerDisplay">25:00</div>
+        <div class="text-emerald-400/80 mt-2 font-medium tracking-widest" id="timerMode">WORK SESSION</div>
+      </div>
+
+      <div class="flex justify-center gap-4 mb-8">
+        <button onclick="toggleTimer()" id="startBtn" class="px-8 py-4 bg-emerald-600 hover:bg-emerald-500 rounded-2xl font-bold text-lg w-40 transition-all shadow-lg">Start</button>
+        <button onclick="resetTimer()" class="px-8 py-4 bg-white/10 hover:bg-white/20 rounded-2xl font-bold text-lg transition-all">Reset</button>
+      </div>
+
+      <div class="flex flex-wrap justify-center gap-3 max-w-md mx-auto">
+        <button onclick="setTimerMode(25)" class="px-5 py-2 rounded-full border border-emerald-500/30 hover:bg-emerald-500/30 hover:border-emerald-400 text-sm transition-all">25m Focus</button>
+        <button onclick="setTimerMode(5)" class="px-5 py-2 rounded-full border border-emerald-500/30 hover:bg-emerald-500/30 hover:border-emerald-400 text-sm transition-all">5m Break</button>
+        <button onclick="setTimerMode(15)" class="px-5 py-2 rounded-full border border-emerald-500/30 hover:bg-emerald-500/30 hover:border-emerald-400 text-sm transition-all">15m Long Break</button>
+        <button onclick="setCustomTime()" class="w-full mt-2 px-5 py-3 rounded-full bg-emerald-900/40 border border-emerald-500/50 hover:bg-emerald-500/40 text-sm font-medium transition-all flex justify-center items-center gap-2">
+          <i class="fas fa-cog"></i> Set Custom Minutes
+        </button>
+      </div>
+    </div>
+
     <div id="page-1" class="page hidden">
       <div class="flex justify-between mb-8">
-        <h2 class="text-4xl font-bold">My Timetable</h2>
+        <h2 class="text-4xl font-bold text-emerald-300">My Timetable</h2>
         <div class="flex gap-3">
-          <button onclick="addRow()" class="bg-emerald-600 px-5 py-3 rounded-2xl flex items-center gap-2">
+          <button onclick="addRow()" class="bg-emerald-600 hover:bg-emerald-500 px-5 py-3 rounded-2xl flex items-center gap-2 transition-all shadow-lg">
             <i class="fas fa-plus"></i> Add Period
           </button>
-          <button onclick="addColumn()" class="bg-emerald-600 px-5 py-3 rounded-2xl flex items-center gap-2">
+          <button onclick="addColumn()" class="bg-emerald-600 hover:bg-emerald-500 px-5 py-3 rounded-2xl flex items-center gap-2 transition-all shadow-lg">
             <i class="fas fa-plus"></i> Add Day
           </button>
-          <button onclick="exportTimetable()" class="bg-white text-black px-5 py-3 rounded-2xl">Download PNG</button>
+          <button onclick="exportTimetable()" class="bg-white hover:bg-gray-200 text-black px-5 py-3 rounded-2xl transition-all font-medium shadow-lg">Download PNG</button>
         </div>
       </div>
-      <div id="timetable" class="bg-white/5 backdrop-blur rounded-3xl p-4 overflow-x-auto"></div>
+      <div id="timetable" class="bg-white/5 backdrop-blur rounded-3xl p-4 overflow-x-auto border border-white/10 transition-all"></div>
     </div>
 
-    <!-- Todo -->
     <div id="page-2" class="page hidden">
-      <h2 class="text-4xl font-bold mb-6">Today's Todo List 📝</h2>
+      <h2 class="text-4xl font-bold mb-6 text-emerald-300">Today's Todo List 📝</h2>
       <div class="max-w-2xl">
         <div class="flex gap-3 mb-6">
-          <input id="todoInput" type="text" placeholder="Add new task..." class="flex-1 p-5 rounded-3xl bg-white/10 border border-emerald-400/30">
-          <button onclick="addTodo()" class="px-8 bg-emerald-600 rounded-3xl font-semibold">Add</button>
+          <input id="todoInput" type="text" placeholder="Add new task..." class="flex-1 p-5 rounded-3xl bg-white/5 border border-emerald-400/30 focus:outline-none focus:border-emerald-400 transition-all shadow-inner">
+          <button onclick="addTodo()" class="px-8 bg-emerald-600 hover:bg-emerald-500 rounded-3xl font-semibold transition-all shadow-lg">Add</button>
         </div>
         <div id="todoList" class="space-y-3"></div>
       </div>
     </div>
 
-    <!-- Music -->
     <div id="page-3" class="page hidden">
-      <h2 class="text-4xl font-bold mb-8">Music Lounge 🎵</h2>
+      <div class="flex justify-between items-center mb-8">
+        <h2 class="text-4xl font-bold text-emerald-300">Music Lounge 🎵</h2>
+        <button onclick="stopMusic()" id="stopBtn" class="hidden px-5 py-3 bg-red-900/40 hover:bg-red-800/60 text-red-300 border border-red-500/30 rounded-2xl transition-all backdrop-blur flex items-center gap-2 shadow-lg">
+          <i class="fas fa-stop-circle"></i> Stop Playing
+        </button>
+      </div>
       
-      <!-- Pre-loaded Music -->
       <div class="mb-10">
-        <h3 class="text-xl mb-4">Pre-loaded Nature Sounds</h3>
+        <h3 class="text-xl mb-4 text-emerald-200">Pre-loaded Nature Sounds</h3>
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <button onclick="playPreMusic(0)" class="bg-white/10 hover:bg-emerald-900/40 p-6 rounded-3xl text-left">
+          <button onclick="playPreMusic(0)" class="bg-white/5 border border-white/10 hover:bg-emerald-800/40 hover:border-emerald-400/50 p-6 rounded-3xl text-left transition-all shadow-md transform hover:-translate-y-1">
             🌧 Gentle Rain
           </button>
-          <button onclick="playPreMusic(1)" class="bg-white/10 hover:bg-emerald-900/40 p-6 rounded-3xl text-left">
+          <button onclick="playPreMusic(1)" class="bg-white/5 border border-white/10 hover:bg-emerald-800/40 hover:border-emerald-400/50 p-6 rounded-3xl text-left transition-all shadow-md transform hover:-translate-y-1">
             🌲 Forest Ambience
           </button>
-          <button onclick="playPreMusic(2)" class="bg-white/10 hover:bg-emerald-900/40 p-6 rounded-3xl text-left">
+          <button onclick="playPreMusic(2)" class="bg-white/5 border border-white/10 hover:bg-emerald-800/40 hover:border-emerald-400/50 p-6 rounded-3xl text-left transition-all shadow-md transform hover:-translate-y-1">
             🎹 Lofi Chill
           </button>
-          <button onclick="playPreMusic(3)" class="bg-white/10 hover:bg-emerald-900/40 p-6 rounded-3xl text-left">
+          <button onclick="playPreMusic(3)" class="bg-white/5 border border-white/10 hover:bg-emerald-800/40 hover:border-emerald-400/50 p-6 rounded-3xl text-left transition-all shadow-md transform hover:-translate-y-1">
             🐦 Birds + River
           </button>
         </div>
       </div>
 
-      <!-- Add from Device -->
-      <div class="bg-white/10 backdrop-blur p-8 rounded-3xl">
-        <h3 class="text-xl mb-4">Add Your Own Music</h3>
-        <input type="file" id="songUpload" accept="audio/*" class="block mb-4">
-        <button onclick="addCustomSong()" class="px-6 py-3 bg-emerald-600 rounded-2xl">Add to Playlist</button>
+      <div class="bg-white/5 backdrop-blur border border-white/10 p-8 rounded-3xl transition-all">
+        <h3 class="text-xl mb-4 text-emerald-200">Add Your Own Music</h3>
+        <input type="file" id="songUpload" accept="audio/*" class="block mb-4 text-emerald-100/70 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-emerald-600 file:text-white hover:file:bg-emerald-500 file:transition-all cursor-pointer">
+        <button onclick="addCustomSong()" class="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 rounded-2xl transition-all shadow-lg">Add to Playlist</button>
       </div>
 
       <div class="mt-10">
-        <h3 class="text-xl mb-4">Your Playlist</h3>
+        <h3 class="text-xl mb-4 text-emerald-200">Your Playlist</h3>
         <div id="playlist" class="space-y-3"></div>
       </div>
     </div>
@@ -141,70 +203,303 @@
 
   <script>
     const quotes = ["The roots grow deep before the branches reach high.", "Small daily improvements lead to big results.", "Discipline is the bridge between goals and success.", "Your future is created by what you do today.", "Stay focused. Stay calm. Stay consistent."];
+    
+    // FULL 118 Elements Array
+    const elementsData = [
+      { n: 1, s: "H", name: "Hydrogen" }, { n: 2, s: "He", name: "Helium" },
+      { n: 3, s: "Li", name: "Lithium" }, { n: 4, s: "Be", name: "Beryllium" },
+      { n: 5, s: "B", name: "Boron" }, { n: 6, s: "C", name: "Carbon" },
+      { n: 7, s: "N", name: "Nitrogen" }, { n: 8, s: "O", name: "Oxygen" },
+      { n: 9, s: "F", name: "Fluorine" }, { n: 10, s: "Ne", name: "Neon" },
+      { n: 11, s: "Na", name: "Sodium" }, { n: 12, s: "Mg", name: "Magnesium" },
+      { n: 13, s: "Al", name: "Aluminium" }, { n: 14, s: "Si", name: "Silicon" },
+      { n: 15, s: "P", name: "Phosphorus" }, { n: 16, s: "S", name: "Sulfur" },
+      { n: 17, s: "Cl", name: "Chlorine" }, { n: 18, s: "Ar", name: "Argon" },
+      { n: 19, s: "K", name: "Potassium" }, { n: 20, s: "Ca", name: "Calcium" },
+      { n: 21, s: "Sc", name: "Scandium" }, { n: 22, s: "Ti", name: "Titanium" },
+      { n: 23, s: "V", name: "Vanadium" }, { n: 24, s: "Cr", name: "Chromium" },
+      { n: 25, s: "Mn", name: "Manganese" }, { n: 26, s: "Fe", name: "Iron" },
+      { n: 27, s: "Co", name: "Cobalt" }, { n: 28, s: "Ni", name: "Nickel" },
+      { n: 29, s: "Cu", name: "Copper" }, { n: 30, s: "Zn", name: "Zinc" },
+      { n: 31, s: "Ga", name: "Gallium" }, { n: 32, s: "Ge", name: "Germanium" },
+      { n: 33, s: "As", name: "Arsenic" }, { n: 34, s: "Se", name: "Selenium" },
+      { n: 35, s: "Br", name: "Bromine" }, { n: 36, s: "Kr", name: "Krypton" },
+      { n: 37, s: "Rb", name: "Rubidium" }, { n: 38, s: "Sr", name: "Strontium" },
+      { n: 39, s: "Y", name: "Yttrium" }, { n: 40, s: "Zr", name: "Zirconium" },
+      { n: 41, s: "Nb", name: "Niobium" }, { n: 42, s: "Mo", name: "Molybdenum" },
+      { n: 43, s: "Tc", name: "Technetium" }, { n: 44, s: "Ru", name: "Ruthenium" },
+      { n: 45, s: "Rh", name: "Rhodium" }, { n: 46, s: "Pd", name: "Palladium" },
+      { n: 47, s: "Ag", name: "Silver" }, { n: 48, s: "Cd", name: "Cadmium" },
+      { n: 49, s: "In", name: "Indium" }, { n: 50, s: "Sn", name: "Tin" },
+      { n: 51, s: "Sb", name: "Antimony" }, { n: 52, s: "Te", name: "Tellurium" },
+      { n: 53, s: "I", name: "Iodine" }, { n: 54, s: "Xe", name: "Xenon" },
+      { n: 55, s: "Cs", name: "Cesium" }, { n: 56, s: "Ba", name: "Barium" },
+      { n: 57, s: "La", name: "Lanthanum" }, { n: 58, s: "Ce", name: "Cerium" },
+      { n: 59, s: "Pr", name: "Praseodymium" }, { n: 60, s: "Nd", name: "Neodymium" },
+      { n: 61, s: "Pm", name: "Promethium" }, { n: 62, s: "Sm", name: "Samarium" },
+      { n: 63, s: "Eu", name: "Europium" }, { n: 64, s: "Gd", name: "Gadolinium" },
+      { n: 65, s: "Tb", name: "Terbium" }, { n: 66, s: "Dy", name: "Dysprosium" },
+      { n: 67, s: "Ho", name: "Holmium" }, { n: 68, s: "Er", name: "Erbium" },
+      { n: 69, s: "Tm", name: "Thulium" }, { n: 70, s: "Yb", name: "Ytterbium" },
+      { n: 71, s: "Lu", name: "Lutetium" }, { n: 72, s: "Hf", name: "Hafnium" },
+      { n: 73, s: "Ta", name: "Tantalum" }, { n: 74, s: "W", name: "Tungsten" },
+      { n: 75, s: "Re", name: "Rhenium" }, { n: 76, s: "Os", name: "Osmium" },
+      { n: 77, s: "Ir", name: "Iridium" }, { n: 78, s: "Pt", name: "Platinum" },
+      { n: 79, s: "Au", name: "Gold" }, { n: 80, s: "Hg", name: "Mercury" },
+      { n: 81, s: "Tl", name: "Thallium" }, { n: 82, s: "Pb", name: "Lead" },
+      { n: 83, s: "Bi", name: "Bismuth" }, { n: 84, s: "Po", name: "Polonium" },
+      { n: 85, s: "At", name: "Astatine" }, { n: 86, s: "Rn", name: "Radon" },
+      { n: 87, s: "Fr", name: "Francium" }, { n: 88, s: "Ra", name: "Radium" },
+      { n: 89, s: "Ac", name: "Actinium" }, { n: 90, s: "Th", name: "Thorium" },
+      { n: 91, s: "Pa", name: "Protactinium" }, { n: 92, s: "U", name: "Uranium" },
+      { n: 93, s: "Np", name: "Neptunium" }, { n: 94, s: "Pu", name: "Plutonium" },
+      { n: 95, s: "Am", name: "Americium" }, { n: 96, s: "Cm", name: "Curium" },
+      { n: 97, s: "Bk", name: "Berkelium" }, { n: 98, s: "Cf", name: "Californium" },
+      { n: 99, s: "Es", name: "Einsteinium" }, { n: 100, s: "Fm", name: "Fermium" },
+      { n: 101, s: "Md", name: "Mendelevium" }, { n: 102, s: "No", name: "Nobelium" },
+      { n: 103, s: "Lr", name: "Lawrencium" }, { n: 104, s: "Rf", name: "Rutherfordium" },
+      { n: 105, s: "Db", name: "Dubnium" }, { n: 106, s: "Sg", name: "Seaborgium" },
+      { n: 107, s: "Bh", name: "Bohrium" }, { n: 108, s: "Hs", name: "Hassium" },
+      { n: 109, s: "Mt", name: "Meitnerium" }, { n: 110, s: "Ds", name: "Darmstadtium" },
+      { n: 111, s: "Rg", name: "Roentgenium" }, { n: 112, s: "Cn", name: "Copernicium" },
+      { n: 113, s: "Nh", name: "Nihonium" }, { n: 114, s: "Fl", name: "Flerovium" },
+      { n: 115, s: "Mc", name: "Moscovium" }, { n: 116, s: "Lv", name: "Livermorium" },
+      { n: 117, s: "Ts", name: "Tennessine" }, { n: 118, s: "Og", name: "Oganesson" }
+    ];
 
     let timetable = JSON.parse(localStorage.getItem('timetable')) || {};
     let days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
     let periods = 10;
     let todos = JSON.parse(localStorage.getItem('todos')) || [];
     let playlist = JSON.parse(localStorage.getItem('playlist')) || [];
+    let savedUser = JSON.parse(localStorage.getItem('vibeUser'));
 
-    // Pre-loaded music (free public links)
     const preMusic = [
-      "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",  // Rain
-      "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3",  // Forest
-      "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-17.mp3", // Lofi style
-      "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3"   // Calm
+      "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",  
+      "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3",  
+      "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-17.mp3", 
+      "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3"   
     ];
 
-    function login() {
-      const name = document.getElementById('studentName').value.trim();
-      if (!name) return alert("Please enter your name");
-      localStorage.setItem('studentName', name);
-      document.getElementById('loginScreen').classList.add('hidden');
-      document.getElementById('mainNav').classList.remove('hidden');
-      initDashboard();
-    }
+    // --- Optimized 3D Tilt Effect ---
+    let lastMove = 0;
+    document.addEventListener('mousemove', (e) => {
+      const now = Date.now();
+      if (now - lastMove < 30) return; // Lag Fix (Throttle)
+      lastMove = now;
+      
+      const xAxis = (window.innerWidth / 2 - e.pageX) / 45; 
+      const yAxis = (window.innerHeight / 2 - e.pageY) / 45;
 
-    function logout() {
-      if (confirm("Logout?")) {
-        document.getElementById('loginScreen').classList.remove('hidden');
-        document.getElementById('mainNav').classList.add('hidden');
+      gsap.to('.tilt-effect', { rotateY: -xAxis, rotateX: yAxis, transformPerspective: 1000, duration: 0.4 });
+      gsap.to('#leaves', { x: xAxis * 1.5, y: yAxis * 1.5, duration: 0.5 });
+    });
+
+    document.addEventListener('mouseleave', () => {
+      gsap.to('.tilt-effect', { rotateY: 0, rotateX: 0, duration: 0.6 });
+      gsap.to('#leaves', { x: 0, y: 0, duration: 0.8 });
+    });
+
+    // --- Auth Logic ---
+    function handleLogin() {
+      const email = document.getElementById('studentEmail').value.trim();
+      const pass = document.getElementById('studentPassword').value.trim();
+      
+      if (!email || !pass) return alert("Please enter both Email and Password");
+      if (!email.includes('@')) return alert("Please enter a valid email address");
+
+      const name = email.split('@')[0];
+
+      if (savedUser) {
+        if (savedUser.email === email && savedUser.pass === pass) {
+          successLogin(savedUser.name);
+        } else {
+          alert("Incorrect email or password!");
+        }
+      } else {
+        const newUser = { email, pass, name };
+        localStorage.setItem('vibeUser', JSON.stringify(newUser));
+        savedUser = newUser;
+        successLogin(name);
       }
     }
 
-    function initDashboard() {
-      const name = localStorage.getItem('studentName');
-      document.getElementById('dash-name').textContent = name;
-      document.getElementById('greeting').textContent = `Hey ${name}!`;
-
-      const quote = quotes[Math.floor(Math.random() * quotes.length)];
-      document.getElementById('motivation').innerHTML = `"${quote}"`;
+    function successLogin(name) {
+      const loginScreen = document.getElementById('loginScreen');
+      gsap.to(loginScreen, {opacity: 0, duration: 0.5, onComplete: () => {
+        loginScreen.classList.add('hidden');
+        document.getElementById('mainNav').classList.remove('hidden');
+        initDashboard(name);
+      }});
     }
 
+    function forgotPassword() {
+      if(!savedUser) return alert("No account found! Just enter an email and password to create one.");
+      if(confirm("Do you want to reset your local account and create a new one? (Timetable/Todos will remain safe)")) {
+        localStorage.removeItem('vibeUser');
+        savedUser = null;
+        alert("Account reset! Log in with new credentials.");
+      }
+    }
+
+    function logout() {
+      if (confirm("Are you sure you want to logout?")) {
+        document.getElementById('studentEmail').value = '';
+        document.getElementById('studentPassword').value = '';
+        
+        const loginScreen = document.getElementById('loginScreen');
+        loginScreen.classList.remove('hidden');
+        gsap.to(loginScreen, {opacity: 1, duration: 0.5});
+        document.getElementById('mainNav').classList.add('hidden');
+        
+        stopMusic();
+        if(isTimerRunning) resetTimer();
+        gsap.to('.tilt-effect', { rotateY: 0, rotateX: 0, duration: 0 });
+      }
+    }
+
+    function initDashboard(name) {
+      document.getElementById('dash-name').textContent = name;
+      const quote = quotes[Math.floor(Math.random() * quotes.length)];
+      document.getElementById('motivation').innerHTML = `"${quote}"`;
+      
+      loadPeriodicTable();
+      showPage(0);
+    }
+
+    // --- Page Transitions ---
+    let currentPage = -1;
+    let isAnimating = false;
+
     function showPage(n) {
-      document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
-      document.getElementById(`page-${n}`).classList.remove('hidden');
-      gsap.fromTo(`#page-${n}`, {opacity:0, y:30}, {opacity:1, y:0, duration:0.6});
+      if (currentPage === n || isAnimating) return;
+      isAnimating = true;
+
+      const oldPage = document.getElementById(`page-${currentPage}`);
+      currentPage = n;
+
+      if (oldPage && !oldPage.classList.contains('hidden')) {
+        gsap.to(oldPage, {opacity: 0, y: -20, duration: 0.2, onComplete: () => {
+          oldPage.classList.add('hidden');
+          renderNewPage(n);
+        }});
+      } else {
+        renderNewPage(n);
+      }
+    }
+
+    function renderNewPage(n) {
+      const newPage = document.getElementById(`page-${n}`);
+      newPage.classList.remove('hidden');
+      gsap.to('.tilt-effect', { rotateY: 0, rotateX: 0, duration: 0 });
+      
+      gsap.fromTo(newPage, {opacity: 0, y: 20}, {opacity: 1, y: 0, duration: 0.4, onComplete: () => {
+        isAnimating = false;
+      }});
       
       if (n===1) loadTimetable();
       if (n===2) loadTodos();
       if (n===3) loadPlaylist();
     }
 
+    // --- Periodic Table Setup ---
+    function loadPeriodicTable() {
+      const container = document.getElementById('periodic-table');
+      container.innerHTML = elementsData.map(e => `
+        <div class="element-card bg-white/5 border border-white/10 p-4 rounded-2xl text-center shadow-md">
+          <div class="text-[10px] text-blue-200/50 text-left">${e.n}</div>
+          <div class="text-3xl font-bold text-blue-400 my-1 drop-shadow-md">${e.s}</div>
+          <div class="text-[11px] uppercase tracking-tighter text-blue-100">${e.name}</div>
+        </div>
+      `).join('');
+    }
+
+    // --- Focus Timer Logic ---
+    let focusTimer;
+    let totalSeconds = 25 * 60;
+    let isTimerRunning = false;
+
+    function formatTime(sec) {
+      const m = Math.floor(sec / 60).toString().padStart(2, '0');
+      const s = (sec % 60).toString().padStart(2, '0');
+      return `${m}:${s}`;
+    }
+
+    function updateTimerDisplay() {
+      document.getElementById('timerDisplay').innerText = formatTime(totalSeconds);
+    }
+
+    function toggleTimer() {
+      const btn = document.getElementById('startBtn');
+      if (isTimerRunning) {
+        clearInterval(focusTimer);
+        btn.innerText = "Resume";
+        btn.classList.replace('bg-orange-500', 'bg-emerald-600');
+      } else {
+        focusTimer = setInterval(() => {
+          if (totalSeconds > 0) {
+            totalSeconds--;
+            updateTimerDisplay();
+          } else {
+            clearInterval(focusTimer);
+            alert("Time's up! Great session.");
+            resetTimer();
+          }
+        }, 1000);
+        btn.innerText = "Pause";
+        btn.classList.replace('bg-emerald-600', 'bg-orange-500');
+      }
+      isTimerRunning = !isTimerRunning;
+    }
+
+    function resetTimer() {
+      clearInterval(focusTimer);
+      isTimerRunning = false;
+      document.getElementById('startBtn').innerText = "Start";
+      document.getElementById('startBtn').classList.replace('bg-orange-500', 'bg-emerald-600');
+      setTimerMode(25);
+    }
+
+    function setTimerMode(minutes) {
+      if(isTimerRunning) toggleTimer(); 
+      totalSeconds = minutes * 60;
+      updateTimerDisplay();
+      
+      const modeText = document.getElementById('timerMode');
+      if(minutes === 25) modeText.innerText = "WORK SESSION";
+      else if(minutes === 5) modeText.innerText = "SHORT BREAK";
+      else if(minutes === 15) modeText.innerText = "LONG BREAK";
+      else modeText.innerText = `CUSTOM (${minutes}M)`;
+    }
+
+    function setCustomTime() {
+      const mins = prompt("Enter study minutes (e.g. 45 or 60):", "25");
+      if (mins && !isNaN(mins) && mins > 0) {
+        setTimerMode(parseInt(mins));
+      }
+    }
+
+    // --- Leaf Particles ---
     function createLeaf() {
       const leaf = document.createElement('div');
       leaf.className = 'leaf';
-      leaf.textContent = ['🍃','🌿','🍂','🌱'][Math.floor(Math.random()*4)];
+      leaf.textContent = ['🍃','🌿','🍂','✨'][Math.floor(Math.random()*4)];
       leaf.style.left = Math.random() * 100 + 'vw';
       leaf.style.top = '-50px';
+      leaf.style.opacity = Math.random() * 0.4 + 0.2;
       document.getElementById('leaves').appendChild(leaf);
-      gsap.to(leaf, {y: window.innerHeight+100, x: Math.random()*300-150, rotation: Math.random()*800, duration: 15+Math.random()*20, onComplete: () => leaf.remove()});
+      gsap.to(leaf, {
+        y: window.innerHeight+100, x: Math.random()*200-100, rotation: Math.random()*360, 
+        duration: 15+Math.random()*15, onComplete: () => leaf.remove()
+      });
     }
 
-    // Pre Music
+    // --- Music Controls ---
     function playPreMusic(index) {
-      document.getElementById('audioPlayer').src = preMusic[index];
-      document.getElementById('audioPlayer').play();
+      const player = document.getElementById('audioPlayer');
+      player.src = preMusic[index];
+      player.play();
+      document.getElementById('stopBtn').classList.remove('hidden');
     }
 
     function addCustomSong() {
@@ -214,33 +509,46 @@
       playlist.push({name: file.name, url});
       localStorage.setItem('playlist', JSON.stringify(playlist));
       loadPlaylist();
-      document.getElementById('audioPlayer').src = url;
-      document.getElementById('audioPlayer').play();
+      playCustomSong(url);
+    }
+
+    function playCustomSong(url) {
+      const player = document.getElementById('audioPlayer');
+      player.src = url;
+      player.play();
+      document.getElementById('stopBtn').classList.remove('hidden');
+    }
+
+    function stopMusic() {
+      const player = document.getElementById('audioPlayer');
+      player.pause();
+      player.currentTime = 0;
+      document.getElementById('stopBtn').classList.add('hidden');
     }
 
     function loadPlaylist() {
       const container = document.getElementById('playlist');
       container.innerHTML = playlist.map(song => `
-        <div onclick="document.getElementById('audioPlayer').src='${song.url}';document.getElementById('audioPlayer').play()" 
-             class="bg-white/10 hover:bg-emerald-900/40 p-5 rounded-3xl cursor-pointer">
+        <div onclick="playCustomSong('${song.url}')" 
+             class="bg-white/5 border border-white/10 hover:bg-emerald-800/40 p-5 rounded-3xl cursor-pointer transition-all shadow-md transform hover:-translate-y-1">
           ${song.name}
         </div>
       `).join('');
     }
 
-    // Other functions (Timetable, Todo, etc.)
+    // --- Timetable ---
     function loadTimetable() {
       let html = `<table class="w-full min-w-[900px]">`;
-      html += `<tr class="bg-white/10"><th class="p-5 text-left">Time</th>`;
-      days.forEach(d => html += `<th class="p-5">${d}</th>`);
+      html += `<tr class="bg-black/20"><th class="p-5 text-left text-emerald-200">Time</th>`;
+      days.forEach(d => html += `<th class="p-5 text-emerald-200">${d}</th>`);
       html += `</tr>`;
       for (let i = 0; i < periods; i++) {
         const time = `${8 + Math.floor(i/2)}:${i%2===0 ? '00' : '30'}`;
-        html += `<tr><td class="p-5 border border-white/10">${time}</td>`;
+        html += `<tr><td class="p-5 border border-white/10 font-medium">${time}</td>`;
         days.forEach(day => {
           const key = `${day}-${time}`;
           const sub = timetable[key] || '';
-          html += `<td onclick="editSlot('${key}')" class="slot p-5 border border-white/10 text-center cursor-pointer min-h-[85px]">${sub || '<span class="opacity-40">+ Add</span>'}</td>`;
+          html += `<td onclick="editSlot('${key}')" class="slot p-5 border border-white/10 text-center cursor-pointer min-h-[85px] transition-all hover:text-emerald-300">${sub || '<span class="opacity-30 hover:opacity-100">+ Add</span>'}</td>`;
         });
         html += `</tr>`;
       }
@@ -264,7 +572,16 @@
       if (newDay) days.push(newDay);
       loadTimetable();
     }
+    
+    async function exportTimetable() {
+      const canvas = await html2canvas(document.getElementById('timetable'));
+      const link = document.createElement('a');
+      link.download = 'VibeTable_Schedule.png';
+      link.href = canvas.toDataURL();
+      link.click();
+    }
 
+    // --- Todo ---
     function addTodo() {
       const input = document.getElementById('todoInput');
       if (input.value.trim()) {
@@ -278,10 +595,10 @@
     function loadTodos() {
       const container = document.getElementById('todoList');
       container.innerHTML = todos.map((todo, i) => `
-        <div class="flex items-center gap-4 bg-white/10 p-5 rounded-3xl">
-          <input type="checkbox" ${todo.done ? 'checked' : ''} onchange="toggleTodo(${i})">
-          <span class="${todo.done ? 'line-through opacity-60' : ''} flex-1">${todo.text}</span>
-          <button onclick="deleteTodo(${i})" class="text-red-400"><i class="fas fa-trash"></i></button>
+        <div class="flex items-center gap-4 bg-white/5 border border-white/10 p-5 rounded-3xl transition-all hover:bg-white/10 shadow-sm">
+          <input type="checkbox" ${todo.done ? 'checked' : ''} onchange="toggleTodo(${i})" class="w-5 h-5 accent-emerald-500 cursor-pointer">
+          <span class="${todo.done ? 'line-through text-emerald-200/40' : 'text-emerald-50'} flex-1 text-lg">${todo.text}</span>
+          <button onclick="deleteTodo(${i})" class="text-red-400/70 hover:text-red-400 transition-transform transform hover:scale-110"><i class="fas fa-trash"></i></button>
         </div>
       `).join('');
     }
@@ -289,25 +606,20 @@
     function toggleTodo(i) { todos[i].done = !todos[i].done; localStorage.setItem('todos', JSON.stringify(todos)); loadTodos(); }
     function deleteTodo(i) { todos.splice(i,1); localStorage.setItem('todos', JSON.stringify(todos)); loadTodos(); }
 
-    async function exportTimetable() {
-      const canvas = await html2canvas(document.getElementById('timetable'));
-      const link = document.createElement('a');
-      link.download = 'VibeTable.png';
-      link.href = canvas.toDataURL();
-      link.click();
-    }
-
+    // --- Initialization ---
     window.onload = () => {
-      const savedName = localStorage.getItem('studentName');
-      if (savedName) {
-        document.getElementById('loginScreen').classList.add('hidden');
-        document.getElementById('mainNav').classList.remove('hidden');
-        initDashboard();
+      if (savedUser) {
+        document.getElementById('loginSubtext').innerText = `Welcome back! Local data found.`;
       }
 
+      // Start particles (optimized count)
       for (let i = 0; i < 12; i++) createLeaf();
-      setInterval(createLeaf, 450);
-      showPage(0);
+      setInterval(createLeaf, 600);
+      
+      // Auto-login if local user exists
+      if (savedUser && localStorage.getItem('vibeUser')) {
+          successLogin(savedUser.name);
+      }
     };
   </script>
 </body>
